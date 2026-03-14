@@ -1,0 +1,97 @@
+# ============================
+# ICC T20 Predictor - .gitignore
+# ============================
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+*.whl
+pip-wheel-metadata/
+*.manifest
+*.spec
+
+# --- Virtual Environments ---
+venv/
+.venv/
+env/
+.env
+.env.local
+.env.production
+.env.staging
+
+# --- IDE & Editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# --- Data Files (large, not for git) ---
+data/raw/*.csv
+data/processed/
+data/embeddings/
+*.parquet
+*.h5
+*.hdf5
+Dataset/
+
+# --- ML Models & Artifacts ---
+mlruns/
+mlflow-artifacts/
+*.pkl
+*.joblib
+*.onnx
+models/
+*.model
+
+# --- Logs ---
+logs/
+*.log
+airflow/logs/
+
+# --- Docker ---
+docker/volumes/
+
+# --- Database ---
+*.db
+*.sqlite3
+
+# --- Great Expectations ---
+etl/great_expectations/uncommitted/
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Secrets & Credentials ---
+*.pem
+*.key
+*.crt
+*.p12
+credentials/
+secrets/
+service_account*.json
+
+# --- Temporary ---
+tmp/
+temp/
+*.tmp
+explore_data.py
+
+# --- Node (if React frontend used) ---
+node_modules/
+.next/
