@@ -46,7 +46,6 @@ class FeatureEngineer:
                    batting_team, runs_batter, runs_extras, runs_total,
                    is_wicket
             FROM raw_deliveries
-            WHERE source = 'batch'
         """, conn)
 
         # Load matches
