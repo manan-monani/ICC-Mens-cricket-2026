@@ -1,0 +1,110 @@
+version: '3.8'
+
+# ============================================================
+# ICC T20 Cricket Predictor - Docker Compose
+# Complete deployment stack
+# ============================================================
+
+services:
+  # ==================== DATABASE ====================
+  postgres:
+    image: postgres:15
+    container_name: icc_postgres
+    environment:
+      POSTGRES_DB: icc_cricket
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./warehouse/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d icc_cricket"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - icc_network
+
+  # ==================== MLFLOW ====================
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.10.0
+    container_name: icc_mlflow
+    command: >
+      mlflow server 
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow_data:/mlflow
+    networks:
+      - icc_network
+
+  # ==================== FASTAPI ====================
+  fastapi:
+    build:
+      context: .
+      dockerfile: docker/Dockerfiles/Dockerfile.api
+    container_name: icc_fastapi
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=icc_cricket
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-secret}
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+    volumes:
+      - ./data:/app/data
+      - ./ml:/app/ml
+      - ./genai:/app/genai
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - icc_network
+
+  # ==================== STREAMLIT ====================
+  streamlit:
+    build:
+      context: .
+      dockerfile: docker/Dockerfiles/Dockerfile.dashboard
+    container_name: icc_streamlit
+    ports:
+      - "8501:8501"
+    environment:
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+    volumes:
+      - ./data:/app/data
+      - ./ml:/app/ml
+      - ./genai:/app/genai
+    depends_on:
+      - fastapi
+    networks:
+      - icc_network
+
+  # ==================== CHROMADB ====================
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: icc_chromadb
+    ports:
+      - "8001:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    networks:
+      - icc_network
+
+volumes:
+  postgres_data:
+  mlflow_data:
+  chroma_data:
+
+networks:
+  icc_network:
+    driver: bridge
